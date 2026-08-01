@@ -22,7 +22,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <h1 className="text-4xl text-red-500 font-bold bg-indigo-50 p-4">
+    <h1 className="text-4xl text-yellow-500 font-bold bg-indigo-500 p-4">
       {loading ? "Loading.." : `Backend status: ${health}`}
     </h1>
   );
