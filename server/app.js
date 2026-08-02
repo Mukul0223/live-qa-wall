@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const errorHandler = require("./src/middleware/error.middleware.js");
+
 const app = express();
 
 const corsOptions = {
@@ -15,11 +17,13 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
-  const timestamp = new Date().toISOString()
+  const timestamp = new Date().toISOString();
   res.json({
     message: `Server working`,
     timestamp: timestamp,
-});
+  });
 });
 
-module.exports = app
+app.use(errorHandler);
+
+module.exports = app;
