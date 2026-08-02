@@ -1,3 +1,7 @@
+/**
+ * Single Responsibility: Generic middleware factory that validates request body
+ * against a given list of required fields/rules without domain-specific logic.
+ */
 const ApiError = require("../utils/ApiError.js");
 
 const validate = (schema) => {
