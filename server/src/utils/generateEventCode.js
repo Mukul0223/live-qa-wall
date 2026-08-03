@@ -1,3 +1,4 @@
+const Event = require("../models/Event.model.js");
 const ApiError = require("./ApiError.js");
 const crypto = require("crypto");
 
