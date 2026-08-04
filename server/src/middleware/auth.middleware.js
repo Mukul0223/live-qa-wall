@@ -1,3 +1,8 @@
+/**
+ * Auth Middleware
+ * Verifies JWT from the Authorization header and attaches the decoded payload to req.user.
+ */
+
 const ApiError = require("../utils/ApiError.js");
 const jwt = require("jsonwebtoken");
 
@@ -11,6 +16,7 @@ const authMiddleware = (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // decoded contains { id: "<user_id>", iat: ..., exp: ... }
     req.user = decoded;
     next();
   } catch (err) {

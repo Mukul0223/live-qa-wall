@@ -1,6 +1,8 @@
-/*
- * Single Responsibility: TO store hosts credentials and identity
- * */
+/**
+ * User Model
+ * Schema representing Host accounts.
+ */
+
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
@@ -19,8 +21,9 @@ const UserSchema = new mongoose.Schema(
 );
 
 /*
- *deleting paswword to ensure sensitive credentials are never accidentally exposed via API responses
- * */
+ * Strips password and internal version key (__v) when converted to JSON
+ * to prevent sensitive data exposure in responses.
+ */
 UserSchema.set("toJSON", {
   transform: (document, returnedObject) => {
     returnedObject._id = returnedObject._id.toString();
