@@ -3,6 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const errorHandler = require("./src/middleware/error.middleware.js");
+const authRoutes = require("./src/routes/auth.routes.js");
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.get("/api/health", (req, res) => {
     timestamp: timestamp,
   });
 });
+
+app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
 
