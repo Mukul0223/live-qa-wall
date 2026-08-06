@@ -1,3 +1,6 @@
+/**
+ * Handles all the functionality for event
+ */
 const generateEventCode = require("../utils/generateEventCode.js");
 const Event = require("../models/Event.model.js");
 const ApiError = require("../utils/ApiError.js");

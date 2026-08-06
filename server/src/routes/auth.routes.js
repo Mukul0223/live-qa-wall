@@ -9,6 +9,7 @@ const authMiddleware = require("../middleware/auth.middleware.js");
 
 const { z } = require("zod");
 
+// Validation Schemas
 const registerSchema = z.object({
   name: z
     .string({ required_error: "Name is required" })

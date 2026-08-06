@@ -40,7 +40,7 @@ const login = asyncHandler(async (req, res) => {
  * Protected route: authMiddleware runs before this and attaches req.user
  */
 const me = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user._id);
 
   if (!user) {
     throw new ApiError(404, "User profile not found");
