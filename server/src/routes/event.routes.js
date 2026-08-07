@@ -6,6 +6,7 @@ const router = require("express").Router();
 const eventController = require("../controllers/event.controller.js");
 const validate = require("../middleware/validate.middleware.js");
 const authMiddleware = require("../middleware/auth.middleware.js");
+const questionRoutes = require("../routes/question.routes.js");
 
 const { z } = require("zod");
 
@@ -48,5 +49,7 @@ router.put(
 router.delete("/:id", authMiddleware, eventController.deleteEvent);
 
 router.post("/:id/end", authMiddleware, eventController.endEvent);
+
+router.use("/:eventId/questions", questionRoutes);
 
 module.exports = router;
