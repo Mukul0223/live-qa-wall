@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const registerEventRoomHandlers = require("./eventRoom.socket.js");
 
 let ioInstance = null;
 
@@ -12,6 +13,9 @@ const initSocket = (server) => {
 
   ioInstance.on("connection", (clientSocket) => {
     console.log(`Client connected! Socket ID: ${clientSocket.id}`);
+
+    // Register room join/leave/disconnect handlers for this connected socket
+    registerEventRoomHandlers(ioInstance, clientSocket);
 
     clientSocket.on("disconnect", () => {
       console.log(`Client disconnected! Socket ID: ${clientSocket.id}`);
