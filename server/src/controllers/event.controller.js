@@ -5,6 +5,7 @@
 
 const asyncHandler = require("../utils/asyncHandler.js");
 const eventService = require("../services/event.service.js");
+const { getIo } = require("../sockets/index.js");
 
 /**
  * POST /api/events
@@ -77,6 +78,8 @@ const endEvent = asyncHandler(async (req, res) => {
   const eventId = req.params.id;
 
   const event = await eventService.endEvent(hostId, eventId);
+
+  getIo().to(eventId).emit("event:ended", event);
 
   res.status(200).json({
     success: true,

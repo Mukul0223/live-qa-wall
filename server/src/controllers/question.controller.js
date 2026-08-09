@@ -5,6 +5,7 @@
 
 const asyncHandler = require("../utils/asyncHandler.js");
 const questionService = require("../services/question.service.js");
+const { getIo } = require("../sockets/index.js");
 
 /**
  * POST /api/events/:eventId/questions
@@ -19,6 +20,8 @@ const createQuestion = asyncHandler(async (req, res) => {
     authorNickname,
   );
 
+  const io = getIo();
+  io.to(eventId).emit("question:created", question);
   res.status(201).json({
     success: true,
     message: "Question created",
@@ -52,6 +55,7 @@ const upvoteQuestion = asyncHandler(async (req, res) => {
     participantId,
   );
 
+  getIo().to(question.eventId.toString()).emit("question:upvoted", question);
   res.status(200).json({
     success: true,
     data: { question },
@@ -67,6 +71,7 @@ const togglePinQuestion = asyncHandler(async (req, res) => {
 
   const question = await questionService.togglePin(hostId, questionId);
 
+  getIo().to(question.eventId.toString()).emit("question:pinned", question);
   res.status(200).json({
     success: true,
     data: { question },
@@ -82,6 +87,7 @@ const markQuestionAnswerd = asyncHandler(async (req, res) => {
 
   const question = await questionService.markedAnswered(hostId, questionId);
 
+  getIo().to(question.eventId.toString()).emit("question:answered", question);
   res.status(200).json({
     success: true,
     data: { question },
@@ -97,6 +103,7 @@ const archiveQuestion = asyncHandler(async (req, res) => {
 
   const question = await questionService.archiveQuestion(hostId, questionId);
 
+  getIo().to(question.eventId.toString()).emit("question:archived", question);
   res.status(200).json({
     success: true,
     data: { question },
@@ -110,7 +117,12 @@ const deleteQuestion = asyncHandler(async (req, res) => {
   const hostId = req.user._id;
   const questionId = req.params.id;
 
-  const { message } = await questionService.deleteQuestion(hostId, questionId);
+  const { message, eventId } = await questionService.deleteQuestion(
+    hostId,
+    questionId,
+  );
+
+  getIo().to(eventId).emit("question:deleted", { questionId });
 
   res.status(200).json({
     success: true,

@@ -103,8 +103,9 @@ const archiveQuestion = async (hostId, questionId) => {
 
 const deleteQuestion = async (hostId, questionId) => {
   const question = await verifyHost(hostId, questionId);
+  const eventId = question.eventId.toString();
   await question.deleteOne();
-  return { message: "Question deleted successfully" };
+  return { message: "Question deleted successfully", eventId };
 };
 
 module.exports = {
