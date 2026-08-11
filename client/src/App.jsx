@@ -7,27 +7,31 @@ import CreateEventPage from "./pages/CreateEventPage.jsx";
 import EventRoomPage from "./pages/EventRoomPage.jsx";
 import HostRoomPage from "./pages/HostRoomPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import { ToastContainer } from "./components/feedback/ToastContainer.jsx";
 
 const App = () => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <>
+      <ToastContainer />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      {/* Host Routes */}
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/events/new" element={<CreateEventPage />} />
-      <Route path="/host/:eventId" element={<HostRoomPage />} />
+        {/* Host Routes */}
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/events/new" element={<CreateEventPage />} />
+        <Route path="/host/:eventId" element={<HostRoomPage />} />
 
-      {/* Audience Routes */}
-      <Route path="/join/:code?" element={<EventRoomPage />} />
-      <Route path="/event/:eventId" element={<EventRoomPage />} />
+        {/* Audience Routes */}
+        <Route path="/join/:code?" element={<EventRoomPage />} />
+        <Route path="/event/:eventId" element={<EventRoomPage />} />
 
-      {/* 404 Fallback Route */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* 404 Fallback Route */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
 };
 
