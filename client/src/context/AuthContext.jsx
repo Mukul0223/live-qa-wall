@@ -2,15 +2,13 @@
 // of the app. Responsible for (1) persisting the token across page
 // refreshes and (2) restoring the session on initial load by validating
 // that persisted token against the backend.
-//
-// The token is persisted to localStorage (rather than kept only in memory)
-// so a page refresh doesn't silently log the host out — session continuity
-// across refresh was an explicit design decision (see Milestone 8 blueprint,
-// Section 11). axiosClient.js (Step 8.1) reads this same localStorage key
-// directly on every outgoing request, so it always sees the current token
-// without needing a separate in-memory bridge.
 import { useState, useEffect } from "react";
 import { AuthContext } from "./AuthContextObject";
+import {
+  register as apiRegister,
+  login as apiLogin,
+  getCurrentUser as apiGetCurrentUser,
+} from "../api/auth.api";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -23,9 +21,6 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Guards against calling setState after this component has unmounted
-    // (e.g. React Strict Mode's mount/unmount/remount in dev, or a real
-    // unmount racing a slow request) once Milestone 9 replaces the stub
-    // below with a real awaited API call.
     let ignore = false;
 
     const restoreSession = async () => {
@@ -37,19 +32,12 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        // TODO (Milestone 9): replace this stub with a real call, e.g.
-        //   const { data } = await axiosClient.get("/auth/me");
-        //   setUser(data.user);
-        // to confirm storedToken is still valid and fetch fresh profile
-        // data. Stubbed for now with placeholder data so downstream work
-        // (ProtectedRoute, Navbar) can be built and tested before the
-        // auth API exists.
-        const placeholderUser = {
-          id: "placeholder-id",
-          name: "Placeholder Host",
-        };
+        // Fetch fresh profile data using stored token
+        const response = await apiGetCurrentUser();
+        const userData = response.data?.user || response.data || response;
+
         if (!ignore) {
-          setUser(placeholderUser);
+          setUser(userData);
           setToken(storedToken);
         }
       } catch (err) {
@@ -73,12 +61,29 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = (userData, newToken) => {
+  // Authenticate an existing host
+  const login = async (email, password) => {
+    const response = await apiLogin(email, password);
+    const { token: newToken, user: userData } = response.data;
+
     localStorage.setItem("accessToken", newToken);
     setToken(newToken);
     setUser(userData);
+    return response;
   };
 
+  // Register a new host account
+  const register = async (name, email, password) => {
+    const response = await apiRegister(name, email, password);
+    const { token: newToken, user: userData } = response.data;
+
+    localStorage.setItem("accessToken", newToken);
+    setToken(newToken);
+    setUser(userData);
+    return response;
+  };
+
+  // Clear host session
   const logout = () => {
     localStorage.removeItem("accessToken");
     setToken(null);
@@ -86,7 +91,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        isAuthenticated: Boolean(user),
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
