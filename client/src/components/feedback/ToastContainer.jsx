@@ -10,7 +10,7 @@ export const ToastContainer = () => {
   if (notifications.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-auto">
+    <div className="fixed top-20 right-4 z-100 flex flex-col gap-2 pointer-events-auto">
       {notifications.map((toast) => (
         <Toast
           key={toast.id}
