@@ -122,7 +122,7 @@ export const DashboardPage = () => {
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${
                         isActive
                           ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-600"
+                          : "bg-gray-200 text-gray-600"
                       }`}
                     >
                       {isActive && <Radio className="w-3 h-3 animate-pulse" />}
