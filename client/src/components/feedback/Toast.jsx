@@ -41,7 +41,7 @@ export const Toast = ({ id, message, type = "info", onClose }) => {
       <p className="text-sm font-medium flex-1 leading-snug">{message}</p>
       <button
         onClick={() => onClose(id)}
-        className="text-gray-400 hover:text-gray-600 rounded-p-1 focus:outline-none"
+        className="text-gray-400 hover:text-gray-600 rounded-p-1 focus:outline-none cursor-pointer"
         aria-label="Close notification"
       >
         <X className="h-4 w-4" />

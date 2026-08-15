@@ -7,6 +7,7 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import CreateEventPage from "./pages/CreateEventPage.jsx";
 import EventRoomPage from "./pages/EventRoomPage.jsx";
+import JoinPage from "./pages/JoinPage.jsx";
 import HostRoomPage from "./pages/HostRoomPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import { ToastContainer } from "./components/feedback/ToastContainer.jsx";
@@ -51,7 +52,7 @@ const App = () => {
           />
 
           {/* Audience Routes */}
-          <Route path="/join/:code?" element={<EventRoomPage />} />
+          <Route path="/join/:code?" element={<JoinPage />} />
           <Route path="/event/:eventId" element={<EventRoomPage />} />
 
           {/* 404 Fallback Route */}
