@@ -15,7 +15,7 @@ export const getEvents = async () => {
 // 3. Get single event details
 export const getEventById = async (id) => {
   const response = await axiosClient.get(`/events/${id}`);
-  return response.data;
+  return response.data.data.event;
 };
 
 // 4. Update event details
@@ -39,5 +39,5 @@ export const endEvent = async (id) => {
 // 7. Join event by 6-digit code (Audience)
 export const joinEventByCode = async (code) => {
   const response = await axiosClient.get(`/events/join/${code}`);
-  return response.data;
+  return response.data.data.event;
 };

@@ -34,6 +34,7 @@ const JoinPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("=== API RESPONSE FROM JOIN ===", e);
 
     const cleanCode = code.trim();
 
