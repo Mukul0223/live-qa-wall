@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Copy, Check, Power, Radio, ArrowLeft } from "lucide-react";
 
@@ -51,6 +51,19 @@ const EventRoomContent = () => {
     }
   });
 
+  // A ref mirror of upvotedQuestionIds, used only as a synchronous
+  // "in-flight or already-voted" guard inside handleUpvote. React state
+  // updates are not applied instantly, so two clicks on the same question
+  // in quick succession can both read the same stale `upvotedQuestionIds`
+  // and both pass the guard below before either has committed - sending
+  // a duplicate vote that the server rejects, whose rollback then
+  // incorrectly wipes out the legitimate first vote. A ref updates
+  // immediately and synchronously, closing that window entirely.
+  const upvotedIdsRef = useRef(new Set(upvotedQuestionIds));
+  useEffect(() => {
+    upvotedIdsRef.current = new Set(upvotedQuestionIds);
+  }, [upvotedQuestionIds]);
+
   // Load event data on mount
   useEffect(() => {
     if (eventId) {
@@ -97,7 +110,13 @@ const EventRoomContent = () => {
     // The backend has no "remove vote" endpoint — upvoteQuestion is
     // strictly one-directional, deduplicated by participantId server-side.
     // Once voted, this is a no-op rather than a toggle.
-    if (upvotedQuestionIds.includes(questionId)) return;
+    //
+    // Check-and-lock via the ref, synchronously, before any state update
+    // or async work - this is what actually prevents a rapid double-click
+    // from sending two requests for the same question (see the comment
+    // on upvotedIdsRef above).
+    if (upvotedIdsRef.current.has(questionId)) return;
+    upvotedIdsRef.current.add(questionId);
 
     setUpvotedQuestionIds((prev) => [...prev, questionId]);
 
@@ -118,6 +137,7 @@ const EventRoomContent = () => {
       console.error("Failed to upvote question:", err);
       // Roll back both optimistic updates — this was always a fresh vote
       // attempt at this point, so undo means undo, not "toggle back".
+      upvotedIdsRef.current.delete(questionId);
       setUpvotedQuestionIds((prev) => prev.filter((id) => id !== questionId));
       setQuestions((prev) =>
         prev.map((q) =>
