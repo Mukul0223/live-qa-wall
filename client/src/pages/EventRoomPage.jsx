@@ -5,6 +5,7 @@ import { Copy, Check, Power, Radio, ArrowLeft } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { EventProvider } from "../context/EventContext";
 import { useEvent } from "../hooks/useEvent";
+import { getParticipantId } from "../hooks/useParticipantId";
 
 import { endEvent } from "../api/event.api";
 import {
@@ -84,8 +85,8 @@ const EventRoomContent = () => {
 
     // Calls create(...) from question.api.js
     const created = await create(eventId, {
-      text: contentText,
-      authorNickname: authorName,
+      content: contentText,
+      authorName,
     });
 
     setQuestions((prev) => {
@@ -114,8 +115,7 @@ const EventRoomContent = () => {
     );
 
     try {
-      const participantId =
-        user?._id || sessionStorage.getItem("live_qa_nickname");
+      const participantId = user?._id || getParticipantId();
       // Calls upvote(...) from question.api.js
       const updated = await upvote(questionId, participantId);
       setQuestions((prev) =>

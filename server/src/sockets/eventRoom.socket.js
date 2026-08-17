@@ -1,8 +1,14 @@
-const Event = require("../models/Event.model.js");
-
 const registerEventRoomHandlers = (io, socket) => {
+  // Reads the live count directly from Socket.IO's own room registry
+  // instead of a manually accumulated DB counter. This is authoritative
+  // by construction — it can never drift, since nothing is incremented
+  // or decremented; it's just counted fresh from actual connected sockets
+  // every time it's broadcast.
+  const getRoomSize = (eventId) =>
+    io.sockets.adapter.rooms.get(eventId)?.size || 0;
+
   // HANDLER 1: Join Room (Now with Automatic Cleanup & Same-Room Guard)
-  socket.on("event:join", async ({ eventId }) => {
+  socket.on("event:join", ({ eventId }) => {
     try {
       // Guard: If already in this specific room, do nothing to prevent duplicate counts
       if (socket.currentEventId === eventId) {
@@ -13,16 +19,11 @@ const registerEventRoomHandlers = (io, socket) => {
       if (socket.currentEventId && socket.currentEventId !== eventId) {
         const prevEventId = socket.currentEventId;
         socket.leave(prevEventId);
-
-        const prevUpdated = await Event.findOneAndUpdate(
-          { _id: prevEventId, participantCount: { $gt: 0 } },
-          { $inc: { participantCount: -1 } },
-          { new: true },
-        );
+        socket.currentEventId = null;
 
         io.to(prevEventId).emit("participant:left", {
           eventId: prevEventId,
-          participantCount: prevUpdated ? prevUpdated.participantCount : 0,
+          participantCount: getRoomSize(prevEventId),
           socketId: socket.id,
         });
       }
@@ -31,17 +32,10 @@ const registerEventRoomHandlers = (io, socket) => {
       socket.join(eventId);
       socket.currentEventId = eventId;
 
-      // 3. Update DB: Atomically increment participant count for the new room
-      const updatedEvent = await Event.findByIdAndUpdate(
-        eventId,
-        { $inc: { participantCount: 1 } },
-        { new: true },
-      );
-
-      // 4. Notify the new room that the user has joined
+      // 3. Notify the new room that the user has joined, with the true live count
       io.to(eventId).emit("participant:joined", {
         eventId,
-        participantCount: updatedEvent ? updatedEvent.participantCount : 0,
+        participantCount: getRoomSize(eventId),
         socketId: socket.id,
       });
     } catch (error) {
@@ -51,20 +45,14 @@ const registerEventRoomHandlers = (io, socket) => {
   });
 
   // HANDLER 2: Leave Room
-  socket.on("event:leave", async ({ eventId }) => {
+  socket.on("event:leave", ({ eventId }) => {
     try {
       socket.leave(eventId);
       socket.currentEventId = null;
 
-      const updatedEvent = await Event.findOneAndUpdate(
-        { _id: eventId, participantCount: { $gt: 0 } },
-        { $inc: { participantCount: -1 } },
-        { new: true },
-      );
-
       io.to(eventId).emit("participant:left", {
         eventId,
-        participantCount: updatedEvent ? updatedEvent.participantCount : 0,
+        participantCount: getRoomSize(eventId),
         socketId: socket.id,
       });
     } catch (error) {
@@ -74,20 +62,17 @@ const registerEventRoomHandlers = (io, socket) => {
   });
 
   // HANDLER 3: Unexpected Disconnect
-  socket.on("disconnect", async () => {
+  // By the time "disconnect" fires, Socket.IO has already removed this
+  // socket from all its rooms, so the room size read here already
+  // reflects this socket's departure — no manual bookkeeping needed.
+  socket.on("disconnect", () => {
     try {
       const eventId = socket.currentEventId;
 
       if (eventId) {
-        const updatedEvent = await Event.findOneAndUpdate(
-          { _id: eventId, participantCount: { $gt: 0 } },
-          { $inc: { participantCount: -1 } },
-          { new: true },
-        );
-
         io.to(eventId).emit("participant:left", {
           eventId,
-          participantCount: updatedEvent ? updatedEvent.participantCount : 0,
+          participantCount: getRoomSize(eventId),
           socketId: socket.id,
         });
       }
