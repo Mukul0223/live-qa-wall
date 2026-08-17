@@ -25,8 +25,6 @@ const UPVOTES_STORAGE_KEY = "live_qa_upvoted_ids";
 
 const EventRoomContent = () => {
   const { eventId } = useParams();
-  // const params = useParams();
-  // const eventId = params.eventId || params.id || params._id;
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -96,22 +94,17 @@ const EventRoomContent = () => {
   };
 
   const handleUpvote = async (questionId) => {
-    const isAlreadyUpvoted = upvotedQuestionIds.includes(questionId);
+    // The backend has no "remove vote" endpoint — upvoteQuestion is
+    // strictly one-directional, deduplicated by participantId server-side.
+    // Once voted, this is a no-op rather than a toggle.
+    if (upvotedQuestionIds.includes(questionId)) return;
 
-    setUpvotedQuestionIds((prev) =>
-      isAlreadyUpvoted
-        ? prev.filter((id) => id !== questionId)
-        : [...prev, questionId],
-    );
+    setUpvotedQuestionIds((prev) => [...prev, questionId]);
 
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q._id === questionId) {
-          const delta = isAlreadyUpvoted ? -1 : 1;
-          return { ...q, upvotes: Math.max(0, q.upvotes + delta) };
-        }
-        return q;
-      }),
+      prev.map((q) =>
+        q._id === questionId ? { ...q, upvotes: q.upvotes + 1 } : q,
+      ),
     );
 
     try {
@@ -121,11 +114,17 @@ const EventRoomContent = () => {
       setQuestions((prev) =>
         prev.map((q) => (q._id === updated._id ? updated : q)),
       );
-    } catch {
-      setUpvotedQuestionIds((prev) =>
-        isAlreadyUpvoted
-          ? [...prev, questionId]
-          : prev.filter((id) => id !== questionId),
+    } catch (err) {
+      console.error("Failed to upvote question:", err);
+      // Roll back both optimistic updates — this was always a fresh vote
+      // attempt at this point, so undo means undo, not "toggle back".
+      setUpvotedQuestionIds((prev) => prev.filter((id) => id !== questionId));
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q._id === questionId
+            ? { ...q, upvotes: Math.max(0, q.upvotes - 1) }
+            : q,
+        ),
       );
     }
   };

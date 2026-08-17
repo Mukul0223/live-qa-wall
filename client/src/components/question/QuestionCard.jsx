@@ -8,7 +8,7 @@ import { ThumbsUp, CheckCircle, Pin, Trash2, User } from "lucide-react";
  * @param {Object} props.question - Question data object
  * @param {boolean} props.isHost - Indicates whether logged-in user is the host
  * @param {boolean} props.hasUpvoted - Indicates if participant has upvoted this question
- * @param {Function} props.onUpvote - Callback for toggling upvote
+ * @param {Function} props.onUpvote - Callback for upvoting (one-directional — no un-vote)
  * @param {Function} props.onToggleAnswer - Callback for host to toggle answered status
  * @param {Function} props.onTogglePin - Callback for host to toggle pin status
  * @param {Function} props.onDelete - Callback for host to delete question
@@ -74,7 +74,7 @@ export const QuestionCard = ({
         <button
           type="button"
           onClick={() => onUpvote && onUpvote(_id)}
-          disabled={isAnswered}
+          disabled={isAnswered || hasUpvoted}
           className={`flex flex-col items-center justify-center min-w-13 py-2 px-2.5 rounded-xl border transition-colors cursor-pointer ${
             hasUpvoted
               ? "bg-indigo-600 border-indigo-600 text-white"
