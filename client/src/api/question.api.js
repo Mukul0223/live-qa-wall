@@ -3,18 +3,25 @@
  * Handles audience creation/upvoting and host moderation actions.
  */
 import axiosClient from "./axiosClient.js";
+import {
+  normalizeQuestion,
+  normalizeQuestions,
+  toBackendQuestionPayload,
+} from "../utils/normalizeQuestion.js";
 
 // --- Public / Audience Endpoints ---
 
 /**
  * Submit a new question to an event.
+ * Accepts the frontend shape ({ content, authorName }) and translates
+ * it to what the backend controller destructures ({ text, authorNickname }).
  */
 export const create = async (eventId, questionData) => {
   const response = await axiosClient.post(
     `/events/${eventId}/questions`,
-    questionData,
+    toBackendQuestionPayload(questionData),
   );
-  return response.data.data.question;
+  return normalizeQuestion(response.data.data.question);
 };
 
 /**
@@ -22,7 +29,7 @@ export const create = async (eventId, questionData) => {
  */
 export const listForEvent = async (eventId) => {
   const response = await axiosClient.get(`/events/${eventId}/questions`);
-  return response.data.data.questions;
+  return normalizeQuestions(response.data.data.questions);
 };
 
 /**
@@ -32,7 +39,7 @@ export const upvote = async (questionId, participantId) => {
   const response = await axiosClient.post(`/questions/${questionId}/upvote`, {
     participantId,
   });
-  return response.data.data.question;
+  return normalizeQuestion(response.data.data.question);
 };
 
 // --- Host Moderation Endpoints ---
@@ -42,7 +49,7 @@ export const upvote = async (questionId, participantId) => {
  */
 export const pin = async (questionId) => {
   const response = await axiosClient.patch(`/questions/${questionId}/pin`);
-  return response.data.data.question;
+  return normalizeQuestion(response.data.data.question);
 };
 
 /**
@@ -50,7 +57,7 @@ export const pin = async (questionId) => {
  */
 export const answer = async (questionId) => {
   const response = await axiosClient.patch(`/questions/${questionId}/answer`);
-  return response.data.data.question;
+  return normalizeQuestion(response.data.data.question);
 };
 
 /**
@@ -58,7 +65,7 @@ export const answer = async (questionId) => {
  */
 export const archive = async (questionId) => {
   const response = await axiosClient.patch(`/questions/${questionId}/archive`);
-  return response.data.data.question;
+  return normalizeQuestion(response.data.data.question);
 };
 
 /**

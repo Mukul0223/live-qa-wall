@@ -26,6 +26,7 @@ const updateEventSchema = z.object({
 
 // 1. Public Routes (Defined FIRST before generic /:id routes)
 router.get("/join/:code", eventController.getEventByCode);
+router.get("/:id/public", eventController.getEventByIdPublic);
 
 // 2. Protected Routes (Require Authentication)
 router.post(

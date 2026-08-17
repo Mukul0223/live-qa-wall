@@ -11,22 +11,18 @@ const { z } = require("zod");
 
 // 1. Validation Schemas
 const createQuestionSchema = z.object({
-  body: z.object({
-    text: z
-      .string({ required_error: "Question text is required" })
-      .trim()
-      .min(1, "Question text cannot be empty"),
-    authorNickname: z.string().nullish(),
-  }),
+  text: z
+    .string({ required_error: "Question text is required" })
+    .trim()
+    .min(1, "Question text cannot be empty"),
+  authorNickname: z.string().nullish(),
 });
 
 const upvoteQuestionSchema = z.object({
-  body: z.object({
-    participantId: z
-      .string({ required_error: "Participant ID is required" })
-      .trim()
-      .min(1, "Participant ID cannot be empty"),
-  }),
+  participantId: z
+    .string({ required_error: "Participant ID is required" })
+    .trim()
+    .min(1, "Participant ID cannot be empty"),
 });
 
 // 2. Event-Nested Routes (Forwarded from event.routes.js)

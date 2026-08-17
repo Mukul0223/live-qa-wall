@@ -90,10 +90,21 @@ const getEventByCode = async (code) => {
   return event;
 };
 
+// Gets a specific event by its id — no ownership check, no auth.
+// Used by the audience-facing Event Room, which has no logged-in user at all.
+const getEventByIdPublic = async (eventId) => {
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(404, "Event not found");
+  }
+  return event;
+};
+
 module.exports = {
   createEvent,
   getEventsByHost,
   getEventById,
+  getEventByIdPublic,
   updateEvent,
   endEvent,
   deleteEvent,

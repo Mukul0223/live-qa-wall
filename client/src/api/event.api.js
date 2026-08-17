@@ -41,3 +41,9 @@ export const joinEventByCode = async (code) => {
   const response = await axiosClient.get(`/events/join/${code}`);
   return response.data.data.event;
 };
+
+// 8. Get event by ID — public, no auth (Audience Event Room)
+export const getEventByIdPublic = async (id) => {
+  const response = await axiosClient.get(`/events/${id}/public`);
+  return response.data.data.event;
+};

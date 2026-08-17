@@ -116,10 +116,23 @@ const getEventByCode = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * GET /api/events/:id/public
+ */
+const getEventByIdPublic = asyncHandler(async (req, res) => {
+  const eventId = req.params.id;
+  const event = await eventService.getEventByIdPublic(eventId);
+  res.status(200).json({
+    success: true,
+    data: { event },
+  });
+});
+
 module.exports = {
   createEvent,
   getEvents,
   getEventById,
+  getEventByIdPublic,
   updateEvent,
   endEvent,
   deleteEvent,
