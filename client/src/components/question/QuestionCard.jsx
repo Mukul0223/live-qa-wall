@@ -1,11 +1,4 @@
-import {
-  ThumbsUp,
-  CheckCircle,
-  Pin,
-  Archive,
-  Trash2,
-  User,
-} from "lucide-react";
+import { ThumbsUp, CheckCircle, Pin, Trash2, User } from "lucide-react";
 
 /**
  * QuestionCard Component
@@ -37,7 +30,7 @@ export const QuestionCard = ({
   onUpvote,
   onToggleAnswer,
   onTogglePin,
-  onArchive,
+  // onArchive,
   onDelete,
 }) => {
   const {
@@ -185,15 +178,9 @@ export const QuestionCard = ({
             <span>{isAnswered ? "Answered" : "Mark Answered"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onArchive && onArchive(_id)}
-            className="p-2 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors flex items-center gap-1.5 cursor-pointer"
-            title="Archive Question"
-          >
-            <Archive className="w-3.5 h-3.5" />
-            <span>Archive</span>
-          </button>
+          {/* Archive control intentionally hidden for now — onArchive prop
+              and question.api.js's archive() are kept wired so this can
+              be re-enabled later without touching anything else. */}
 
           <button
             type="button"

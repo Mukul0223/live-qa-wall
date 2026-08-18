@@ -34,7 +34,6 @@ import { EventProvider } from "../context/EventContext";
 import { useEvent } from "../hooks/useEvent";
 
 import QuestionList from "../components/question/QuestionList";
-import PinnedQuestionsPanel from "../components/question/PinnedQuestionsPanel";
 
 const HostRoomContent = () => {
   const { eventId } = useParams();
@@ -253,15 +252,7 @@ const HostRoomContent = () => {
         </div>
       </div>
 
-      {/* Live, Moderation-Capable Question Views */}
-      <PinnedQuestionsPanel
-        isHost
-        onToggleAnswer={handleToggleAnswer}
-        onTogglePin={handleTogglePin}
-        onArchive={handleArchive}
-        onDelete={handleDelete}
-      />
-
+      {/* Live, Moderation-Capable Question View */}
       <QuestionList
         questions={questions}
         isHost

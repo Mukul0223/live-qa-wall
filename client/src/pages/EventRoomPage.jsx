@@ -20,7 +20,6 @@ import {
 import QuestionForm from "../components/question/QuestionForm";
 import QuestionList from "../components/question/QuestionList";
 import ParticipantCounter from "../components/event/ParticipantCounter";
-import PinnedQuestionsPanel from "../components/question/PinnedQuestionsPanel";
 
 const UPVOTES_STORAGE_KEY = "live_qa_upvoted_ids";
 
@@ -315,16 +314,6 @@ const EventRoomContent = () => {
         <QuestionForm
           onSubmitQuestion={handleSubmitQuestion}
           isDisabled={isEnded}
-        />
-
-        <PinnedQuestionsPanel
-          isHost={isHost}
-          upvotedQuestionIds={upvotedQuestionIds}
-          onUpvote={handleUpvote}
-          onToggleAnswer={handleToggleAnswer}
-          onTogglePin={handleTogglePin}
-          onArchive={handleArchive}
-          onDelete={handleDelete}
         />
 
         <QuestionList

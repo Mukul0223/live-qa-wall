@@ -52,11 +52,12 @@ export const QuestionList = ({
     }
 
     if (filter === "recent") {
-      // Sort pinned first, then newest creation time
-      return activeQuestions.sort((a, b) => {
-        if (a.isPinned !== b.isPinned) return b.isPinned ? 1 : -1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      // Pure chronological order — pinned-first only applies to "Top".
+      // A pinned question still shows its badge here, it's just sorted
+      // by creation time like everything else.
+      return [...activeQuestions].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
     }
 
     return activeQuestions;
