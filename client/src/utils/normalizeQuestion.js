@@ -17,8 +17,14 @@ export const normalizeQuestion = (q) => {
     content: q.text,
     authorName: q.authorNickname,
     upvotes: q.upvoteCount ?? 0,
+    // NOTE: status is a single mutually-exclusive enum on the backend
+    // ("active" | "pinned" | "answered" | "archived") — a question can
+    // only ever be in ONE of these states, never e.g. pinned AND answered
+    // at once. isPinned/isAnswered/isArchived below are therefore also
+    // mutually exclusive by construction, not independent flags.
     isPinned: q.status === "pinned",
     isAnswered: q.status === "answered",
+    isArchived: q.status === "archived",
   };
 };
 

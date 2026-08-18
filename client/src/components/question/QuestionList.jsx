@@ -13,6 +13,7 @@ import QuestionCard from "./QuestionCard";
  * @param {Function} props.onUpvote - Callback for upvoting
  * @param {Function} props.onToggleAnswer - Callback for toggling answer status
  * @param {Function} props.onTogglePin - Callback for toggling pin status
+ * @param {Function} props.onArchive - Callback for archiving a question (host only)
  * @param {Function} props.onDelete - Callback for deleting
  */
 export const QuestionList = ({
@@ -22,13 +23,18 @@ export const QuestionList = ({
   onUpvote,
   onToggleAnswer,
   onTogglePin,
+  onArchive,
   onDelete,
 }) => {
   const [filter, setFilter] = useState("top"); // 'top' | 'recent' | 'answered'
 
   // Filter & Sort Logic
   const getFilteredQuestions = () => {
-    let list = [...questions];
+    // Archived questions are hidden from every view here — they're
+    // intentionally moved out of the working list by the host, not
+    // deleted. (status is a single enum on the backend, so a question
+    // is never simultaneously archived and anything else.)
+    let list = questions.filter((q) => !q.isArchived);
 
     if (filter === "answered") {
       return list.filter((q) => q.isAnswered);
@@ -58,9 +64,10 @@ export const QuestionList = ({
 
   const displayedQuestions = getFilteredQuestions();
 
+  const visibleQuestions = questions.filter((q) => !q.isArchived);
   const counts = {
-    all: questions.filter((q) => !q.isAnswered).length,
-    answered: questions.filter((q) => q.isAnswered).length,
+    all: visibleQuestions.filter((q) => !q.isAnswered).length,
+    answered: visibleQuestions.filter((q) => q.isAnswered).length,
   };
 
   return (
@@ -139,6 +146,7 @@ export const QuestionList = ({
               onUpvote={onUpvote}
               onToggleAnswer={onToggleAnswer}
               onTogglePin={onTogglePin}
+              onArchive={onArchive}
               onDelete={onDelete}
             />
           ))}

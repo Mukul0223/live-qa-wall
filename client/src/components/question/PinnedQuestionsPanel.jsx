@@ -4,16 +4,37 @@ import { useEvent } from "../../hooks/useEvent";
 import QuestionCard from "./QuestionCard";
 
 /**
- * PinnedQuestionsPanel renders only questions marked with status 'pinned'.
- * Placed above QuestionList to keep active pinned questions prominently displayed.
+ * PinnedQuestionsPanel renders only questions currently in the "pinned"
+ * state. Placed above QuestionList so a pinned question moves here rather
+ * than reordering within the main list, keeping that list's scroll
+ * position stable when a pin/unpin happens.
+ *
+ * Takes the same isHost/callback prop surface as QuestionList (rather
+ * than a separate "mode" string) so QuestionCard has one consistent
+ * contract regardless of which list is rendering it.
+ *
+ * @param {Object} props
+ * @param {boolean} props.isHost - Whether to render host moderation controls
+ * @param {Array} props.upvotedQuestionIds - Question IDs upvoted by current participant
+ * @param {Function} props.onUpvote - Callback for upvoting (audience)
+ * @param {Function} props.onToggleAnswer - Callback for host to toggle answered status
+ * @param {Function} props.onTogglePin - Callback for host to toggle pin status
+ * @param {Function} props.onArchive - Callback for host to archive a question
+ * @param {Function} props.onDelete - Callback for host to delete a question
  */
-export const PinnedQuestionsPanel = ({ mode = "audience" }) => {
+export const PinnedQuestionsPanel = ({
+  isHost = false,
+  upvotedQuestionIds = [],
+  onUpvote,
+  onToggleAnswer,
+  onTogglePin,
+  onArchive,
+  onDelete,
+}) => {
   const { questions } = useEvent();
 
   // Filter strictly for pinned questions
-  const pinnedQuestions = questions.filter(
-    (q) => q.status === "pinned" || q.isPinned === true,
-  );
+  const pinnedQuestions = questions.filter((q) => q.isPinned === true);
 
   // Do not render empty container box if no questions are pinned
   if (pinnedQuestions.length === 0) {
@@ -38,7 +59,16 @@ export const PinnedQuestionsPanel = ({ mode = "audience" }) => {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
             >
-              <QuestionCard question={question} mode={mode} />
+              <QuestionCard
+                question={question}
+                isHost={isHost}
+                hasUpvoted={upvotedQuestionIds.includes(question._id)}
+                onUpvote={onUpvote}
+                onToggleAnswer={onToggleAnswer}
+                onTogglePin={onTogglePin}
+                onArchive={onArchive}
+                onDelete={onDelete}
+              />
             </motion.div>
           ))}
         </AnimatePresence>

@@ -13,6 +13,7 @@ import {
   upvote,
   answer,
   pin,
+  archive,
   deleteQuestion,
 } from "../api/question.api";
 
@@ -165,9 +166,17 @@ const EventRoomContent = () => {
     await pin(questionId);
   };
 
+  const handleArchive = async (questionId) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q._id === questionId ? { ...q, isArchived: true } : q)),
+    );
+    // Calls archive(...) from question.api.js
+    await archive(questionId);
+  };
+
   const handleDelete = async (questionId) => {
-    if (!window.confirm("Are you sure you want to delete this question?"))
-      return;
+    // QuestionCard itself confirms before calling this — no second
+    // confirmation needed here.
     setQuestions((prev) => prev.filter((q) => q._id !== questionId));
     // Calls deleteQuestion(...) from question.api.js
     await deleteQuestion(questionId);
@@ -308,7 +317,15 @@ const EventRoomContent = () => {
           isDisabled={isEnded}
         />
 
-        <PinnedQuestionsPanel mode={isHost ? "host" : "audience"} />
+        <PinnedQuestionsPanel
+          isHost={isHost}
+          upvotedQuestionIds={upvotedQuestionIds}
+          onUpvote={handleUpvote}
+          onToggleAnswer={handleToggleAnswer}
+          onTogglePin={handleTogglePin}
+          onArchive={handleArchive}
+          onDelete={handleDelete}
+        />
 
         <QuestionList
           questions={questions}
@@ -317,6 +334,7 @@ const EventRoomContent = () => {
           onUpvote={handleUpvote}
           onToggleAnswer={handleToggleAnswer}
           onTogglePin={handleTogglePin}
+          onArchive={handleArchive}
           onDelete={handleDelete}
         />
       </div>
