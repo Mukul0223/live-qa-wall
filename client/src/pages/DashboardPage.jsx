@@ -12,15 +12,18 @@ import {
   Sparkles,
   Radio,
   ChevronRight,
+  Trash2,
   Loader2,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { getEvents } from "../api/event.api";
+import { getEvents, deleteEvent } from "../api/event.api";
 
 export const DashboardPage = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -43,6 +46,22 @@ export const DashboardPage = () => {
 
     fetchEvents();
   }, []);
+
+  const handleDelete = async (eventId) => {
+    setConfirmDeleteId(null);
+    setDeletingId(eventId);
+    try {
+      await deleteEvent(eventId);
+      // This list has no live socket subscription (it's a plain REST
+      // snapshot, unlike EventContext's data), so removing it from local
+      // state here — rather than trusting a broadcast — is correct.
+      setEvents((prev) => prev.filter((e) => e._id !== eventId));
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -108,14 +127,30 @@ export const DashboardPage = () => {
           <div className="grid gap-4 md:grid-cols-2">
             {events.map((event) => {
               const isActive = event.status === "active";
+              const isDeleting = deletingId === event._id;
               return (
-                <Link
+                <div
                   key={event._id}
-                  to={`/host/${event._id}`}
-                  className="group block p-6 bg-white rounded-xl border border-gray-200 hover:border-indigo-500 hover:shadow-md transition duration-150 ease-in-out"
+                  className="group relative p-6 bg-white rounded-xl border border-gray-200 hover:border-indigo-500 hover:shadow-md transition duration-150 ease-in-out"
                 >
-                  <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition line-clamp-1">
+                  {/* Delete button — kept outside the Link below so it
+                      never triggers navigation to the Host Room. */}
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteId(event._id)}
+                    disabled={isDeleting}
+                    title="Delete Event"
+                    className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  <div className="flex justify-between items-start mb-3 gap-2 pr-8">
+                    <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
                       {event.title}
                     </h3>
                     <span
@@ -136,7 +171,10 @@ export const DashboardPage = () => {
                     </p>
                   )}
 
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 mt-auto">
+                  <Link
+                    to={`/host/${event._id}`}
+                    className="flex justify-between items-center pt-3 border-t border-gray-100 text-xs text-gray-500 mt-auto"
+                  >
                     <span>
                       Code:{" "}
                       <strong className="text-gray-900 tracking-wider font-mono text-sm">
@@ -146,13 +184,42 @@ export const DashboardPage = () => {
                     <span className="inline-flex items-center text-indigo-600 font-medium group-hover:translate-x-1 transition-transform">
                       Manage Room <ChevronRight className="w-4 h-4 ml-0.5" />
                     </span>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900">
+              Delete this event?
+            </h3>
+            <p className="text-sm text-gray-600">
+              This will permanently delete the event and all of its questions.
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDeleteId)}
+                className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors cursor-pointer"
+              >
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

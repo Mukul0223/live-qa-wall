@@ -4,6 +4,7 @@ import { getEventByIdPublic } from "../api/event.api";
 import { listForEvent } from "../api/question.api";
 import { useEventSocket } from "../hooks/useEventSocket";
 import { normalizeQuestion } from "../utils/normalizeQuestion";
+import { useNotification } from "../hooks/useNotification";
 
 /**
  * EventProvider manages live state for a single active event session.
@@ -14,6 +15,7 @@ export const EventProvider = ({ children }) => {
   const [event, setEvent] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [participantCount, setParticipantCount] = useState(0);
+  const { addNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const eventId = event?._id || null;
@@ -84,6 +86,7 @@ export const EventProvider = ({ children }) => {
       },
       "event:ended": (updatedEvent) => {
         setEvent((prev) => ({ ...prev, status: "ended", ...updatedEvent }));
+        addNotification("This event has ended.", "info");
       },
       "participant:joined": (data) => {
         // Backend emits `participantCount`, not `count` — trust the
@@ -102,7 +105,7 @@ export const EventProvider = ({ children }) => {
         );
       },
     }),
-    [],
+    [addNotification],
   );
 
   // 3. Connect real-time socket subscription

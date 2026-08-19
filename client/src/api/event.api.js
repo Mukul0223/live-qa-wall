@@ -21,7 +21,7 @@ export const getEventById = async (id) => {
 // 4. Update event details
 export const updateEvent = async (id, eventData) => {
   const response = await axiosClient.put(`/events/${id}`, eventData);
-  return response.data;
+  return response.data.data.event;
 };
 
 // 5. Delete an event

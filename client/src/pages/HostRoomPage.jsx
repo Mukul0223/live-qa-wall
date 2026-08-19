@@ -24,10 +24,10 @@
  */
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Radio, Power, Loader2 } from "lucide-react";
+import { ArrowLeft, Radio, Power, Pencil, Loader2 } from "lucide-react";
 
 import EventCodeDisplay from "../components/event/EventCodeDisplay";
-import { getEventById, endEvent } from "../api/event.api";
+import { getEventById, endEvent, updateEvent } from "../api/event.api";
 import { pin, answer, archive, deleteQuestion } from "../api/question.api";
 
 import { EventProvider } from "../context/EventContext";
@@ -43,9 +43,21 @@ const HostRoomContent = () => {
   const [checkingOwnership, setCheckingOwnership] = useState(true);
   const [ending, setEnding] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
 
-  const { event, questions, participantCount, loading, error, loadEvent } =
-    useEvent();
+  const {
+    event,
+    questions,
+    participantCount,
+    loading,
+    error,
+    loadEvent,
+    setEvent,
+  } = useEvent();
 
   // Step 1: ownership gate. Only once this succeeds do we hand off to
   // EventContext's live loader below.
@@ -80,6 +92,43 @@ const HostRoomContent = () => {
   // Host Actions — each is a bare REST call; the broadcast loop (already
   // proven in Milestone 12) is trusted to update `event`/`questions`.
   // ---------------------------------------------------------------------
+  const handleOpenEdit = () => {
+    setEditTitle(event.title || "");
+    setEditDescription(event.description || "");
+    setEditError("");
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      setEditError("Title cannot be empty.");
+      return;
+    }
+
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      // There's no socket broadcast for event edits (only question and
+      // participant changes are broadcast per the app's design), so this
+      // is the one host action that legitimately updates local state
+      // directly from the REST response — unlike pin/answer/archive/
+      // delete/end, which all trust the broadcast loop instead.
+      const updated = await updateEvent(eventId, {
+        title: trimmedTitle,
+        description: editDescription.trim(),
+      });
+      setEvent((prev) => ({ ...prev, ...updated }));
+      setShowEditModal(false);
+    } catch (err) {
+      console.error("Failed to update event:", err);
+      setEditError(err.response?.data?.message || "Failed to save changes.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const handleEndEvent = useCallback(async () => {
     setShowConfirmModal(false);
     setEnding(true);
@@ -207,20 +256,30 @@ const HostRoomContent = () => {
           )}
         </div>
 
-        {isActive && (
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => setShowConfirmModal(true)}
-            disabled={ending}
-            className="inline-flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-medium px-4 py-2 rounded-xl text-sm transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
+            onClick={handleOpenEdit}
+            className="inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 font-medium px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
           >
-            {ending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Power className="w-4 h-4" />
-            )}
-            End Event
+            <Pencil className="w-4 h-4" />
+            Edit
           </button>
-        )}
+
+          {isActive && (
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              disabled={ending}
+              className="inline-flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-medium px-4 py-2 rounded-xl text-sm transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {ending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Power className="w-4 h-4" />
+              )}
+              End Event
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 6-Digit Join Code Display */}
@@ -261,6 +320,79 @@ const HostRoomContent = () => {
         onArchive={handleArchive}
         onDelete={handleDelete}
       />
+
+      {/* Edit Event Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <form
+            onSubmit={handleSaveEdit}
+            className="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl"
+          >
+            <h3 className="text-lg font-bold text-gray-900">Edit Event</h3>
+
+            {editError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+                {editError}
+              </div>
+            )}
+
+            <div>
+              <label
+                htmlFor="edit-title"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
+                Title
+              </label>
+              <input
+                id="edit-title"
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                disabled={savingEdit}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm disabled:bg-gray-100"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-description"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
+                Description{" "}
+                <span className="text-gray-400 font-normal">(Optional)</span>
+              </label>
+              <textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                disabled={savingEdit}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none disabled:bg-gray-100"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                disabled={savingEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={savingEdit}
+                className="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {savingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* End Event Confirmation Modal */}
       {showConfirmModal && (
